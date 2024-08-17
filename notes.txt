@@ -1,0 +1,4 @@
+Todos:
+
+- Run sims for more opponents than just 1. For ties, value it by dividing the pot by the
+  number of opponents the player ties with?
