@@ -4,6 +4,8 @@ from itertools import product
 from dataclasses import dataclass
 from time import time
 import sys
+from datetime import datetime
+import os
 
 from poker import Range # type: ignore
 import compare
@@ -95,7 +97,9 @@ def main():
     preflop_types = Range('XX').to_ascii().split() # all types of suited/offsuit preflop hands
     results: list[EV] = []
     num_opps = int(sys.argv[1])
-    filename = f"preflop odds against {num_opps} opps - {round(time())}.txt"
+    filename = (datetime.today().strftime('%b %d %Y').replace(' 0', ' ') +
+                f"/preflop odds against {num_opps} opps - {round(time())}.txt")
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     for i, hand_type in enumerate(preflop_types):
         print(f'Ran simulations for {i} out of 169 starting hand types')
         print(f"Running simulation for {hand_type} against {num_opps} opps")
