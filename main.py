@@ -90,8 +90,8 @@ def write_EVs_to_file(filename: str, evs: list[EV], trailing_msg: str = '') -> N
     """Any existing contents in the file will be overwritten; `trailing_msg` will be added
        at the end of each line."""
     with open(filename, 'w') as f:
-        for ev in evs:
-            f.write(f"{str(ev)}{trailing_msg}\n")
+        for i, ev in enumerate(evs):
+            f.write(f"{i+1}. {str(ev)}{trailing_msg}\n")
 
 def main():
     preflop_types = Range('XX').to_ascii().split() # all types of suited/offsuit preflop hands
