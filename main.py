@@ -58,7 +58,7 @@ class EV:
         return round(self.pots_won / self.hands_played * 100, 3)
 
     def __str__(self) -> str:
-        return f"{self.hand.hand_type()} has an EV of {self.ev()}% of the pot"
+        return f"{self.hand.hand_type()} wins {self.ev()}% of the pot on avg"
 
 def run_sim(hand: Hand, num_opps) -> EV:
     all_cards = {Card(x[0], x[1]) for x in product('23456789TJQKA', 'shdc')} - {hand.card1, hand.card2}
@@ -91,24 +91,24 @@ def write_EVs_to_file(filename: str, evs: list[EV], trailing_msg: str = '') -> N
        at the end of each line."""
     with open(filename, 'w') as f:
         for i, ev in enumerate(evs):
-            f.write(f"{i+1}. {str(ev)}{trailing_msg}\n")
+            f.write(f"#{i+1}: {str(ev)}{trailing_msg}\n")
 
 def main():
     preflop_types = Range('XX').to_ascii().split() # all types of suited/offsuit preflop hands
     results: list[EV] = []
     num_opps = int(sys.argv[1])
     filename = (datetime.today().strftime('%b %d %Y').replace(' 0', ' ') +
-                f"/preflop odds against {num_opps} opps - {round(time())}.txt")
+                f"/preflop odds vs {num_opps} opps - {round(time())}.txt")
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     for i, hand_type in enumerate(preflop_types):
         print(f'Ran simulations for {i} out of 169 starting hand types')
-        print(f"Running simulation for {hand_type} against {num_opps} opps")
+        print(f"Running simulation for {hand_type} vs {num_opps} opps")
         suit1, suit2 = 'd', ('d' if hand_type.endswith('s') else 'h')
         val1, val2 = hand_type[:2]
         hand = Hand(Card(val1, suit1), Card(val2, suit2))
         results.append(run_sim(hand, num_opps))
         results.sort(key=lambda ev: ev.ev(), reverse=True)
-        write_EVs_to_file(filename, results, f" against {num_opps} opponents")
+        write_EVs_to_file(filename, results, f" vs {num_opps} opps")
 
 if __name__ == '__main__':
     main()
