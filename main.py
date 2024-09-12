@@ -6,9 +6,16 @@ from time import time
 import sys
 from datetime import datetime
 import os
+from typing import Optional
 
 from poker import Range # type: ignore
 import compare
+from compare import GameType
+
+SHORTDECK_VALS = '6789TJQKA'
+HOLDEM_VALS = '2345' + SHORTDECK_VALS
+
+gametype: Optional[GameType] = None
 
 @dataclass
 class Card:
@@ -60,8 +67,12 @@ class EV:
     def __str__(self) -> str:
         return f"{self.hand.hand_type()} wins {self.ev()}% of the pot on avg"
 
-def run_sim(hand: Hand, num_opps) -> EV:
-    all_cards = {Card(x[0], x[1]) for x in product('23456789TJQKA', 'shdc')} - {hand.card1, hand.card2}
+def run_sim(hand: Hand, num_opps: int) -> EV:
+    assert isinstance(gametype, GameType)
+    card_vals = SHORTDECK_VALS if gametype in (
+        GameType.SHORTDECK, GameType.SHORTDECK_TRIPS
+    ) else HOLDEM_VALS
+    all_cards = {Card(*x) for x in product(card_vals, 'shdc')} - {hand.card1, hand.card2}
     ev = EV(hand)
     num_trials = 100000
     for i in range(num_trials):
@@ -94,14 +105,23 @@ def write_EVs_to_file(filename: str, evs: list[EV], trailing_msg: str = '') -> N
             f.write(f"#{i+1}: {str(ev)}{trailing_msg}\n")
 
 def main():
+    global gametype
+    gametype = (GameType.TEXAS if len(sys.argv) < 3 else
+                GameType.SHORTDECK if sys.argv[2] == 'shortdeck' else
+                GameType.SHORTDECK_TRIPS if sys.argv[2] in ('shortdeck_trips', 'shortdeck_v') else
+                None)
+    assert isinstance(gametype, GameType)
+    compare.set_gametype(gametype)
     preflop_types = Range('XX').to_ascii().split() # all types of suited/offsuit preflop hands
+    if gametype in (GameType.SHORTDECK, GameType.SHORTDECK_TRIPS):
+        preflop_types = [h for h in preflop_types if all(v not in h for v in '2345')]
     results: list[EV] = []
     num_opps = int(sys.argv[1])
     filename = (datetime.today().strftime('%b %d %Y').replace(' 0', ' ') +
                 f"/preflop odds vs {num_opps} opps - {round(time())}.txt")
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     for i, hand_type in enumerate(preflop_types):
-        print(f'Ran simulations for {i} out of 169 starting hand types')
+        print(f'Ran simulations for {i} out of {len(preflop_types)} starting hand types')
         print(f"Running simulation for {hand_type} vs {num_opps} opps")
         suit1, suit2 = 'd', ('d' if hand_type.endswith('s') else 'h')
         val1, val2 = hand_type[:2]
