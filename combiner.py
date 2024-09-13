@@ -4,7 +4,7 @@ import os
 def sort_key(line: str) -> str:
     return ' '.join(sub for sub in line.split() if not sub.endswith(('%', ':')))
 
-def main():
+def main() -> None:
     folder_name = sys.argv[1]
     lines: list[str] = []
     output_filename = 'combined.txt'

@@ -104,7 +104,7 @@ def write_EVs_to_file(filename: str, evs: list[EV], trailing_msg: str = '') -> N
         for i, ev in enumerate(evs):
             f.write(f"#{i+1}: {str(ev)}{trailing_msg}\n")
 
-def main():
+def main() -> None:
     global gametype
     gametype = (GameType.TEXAS if len(sys.argv) < 3 else
                 GameType.SHORTDECK if sys.argv[2] == 'shortdeck' else

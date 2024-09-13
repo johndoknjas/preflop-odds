@@ -1,8 +1,11 @@
 # Written by Tyler Fisher, 20 Feb 2017, and modifications made by myself. For his original, see here:
 # https://github.com/tylerjustinfisher/poker-hand-comparator/blob/f17df6dc9466e890eea51053c648578c923b8b37/heads%20up/handComparator_code-golf.py
 
+from __future__ import annotations
+
 from enum import Enum, auto
 from typing import Optional
+import itertools
 
 class GameType(Enum):
     TEXAS = auto()
@@ -49,26 +52,19 @@ def first7HandIsBetter(h1: list[int], h2: list[int]) -> bool | None:
             return None  # all were the same, so it's a chop
     assert False
 
-def getBestFrom7(sevenCards: list[int], sevenSuits: list[int]):
-    # todo - see if this can be sped up, why are the i-j loops iterating 42 times and not 21.
-    # given 7 cards, call the 5-card comparator on each of the 21 poss. combos
-    bestHand = None
-    for i in range(7):
-        for j in range(i + 1, 7):
-            s = []
-            for k in range(7):
-                if k != i and k != j:
-                    s.extend([sevenCards[k], sevenSuits[k]])
-            newHand = getHandRankFromFiveCards(
-                sorted([s[0], s[2], s[4], s[6], s[8]]), [s[1], s[3], s[5], s[7], s[9]]
-            )
-            if bestHand is None or first7HandIsBetter(newHand, bestHand):
-                bestHand = newHand
-    assert bestHand
-    return bestHand
+def getBestFrom7(sevenCards: list[int], sevenSuits: list[int]) -> list[int]:
+    """Given 7 cards, call the 5-card comparator on each of the 21 possible combos."""
+    bestHandRank = None
+    for comb_5 in itertools.combinations(zip(sevenCards, sevenSuits), 5):
+        newHandCards, newHandSuits = zip(*comb_5)
+        newHandRank = getHandRankFromFiveCards(sorted(newHandCards), newHandSuits)
+        if bestHandRank is None or first7HandIsBetter(newHandRank, bestHandRank):
+            bestHandRank = newHandRank
+    assert bestHandRank
+    return bestHandRank
 
-def getHandRankFromFiveCards(fC: list[int], fS: list[int]):
-    """`fC` are the five values and `fS` are the five suits"""
+def getHandRankFromFiveCards(fC: list[int], fS: list[int] | tuple[int, int, int, int, int]):
+    """`fC` contains the five values (should already be sorted) and `fS` contains the five suits."""
     # given 5 cards, determine what the rank of the hand is and add kicker info to it
     if fS.count(fS[0]) == len(fS):
         # flush, see if it's a regular flush or a straight flush
