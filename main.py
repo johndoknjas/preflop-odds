@@ -115,20 +115,21 @@ def main() -> None:
     preflop_types = Range('XX').to_ascii().split() # all types of suited/offsuit preflop hands
     if gametype in (GameType.SHORTDECK, GameType.SHORTDECK_TRIPS):
         preflop_types = [h for h in preflop_types if all(v not in h for v in '2345')]
-    results: list[EV] = []
-    num_opps = int(sys.argv[1])
-    filename = (datetime.today().strftime('%b %d %Y').replace(' 0', ' ') +
-                f"/preflop odds vs {num_opps} opps in {gametype.value} - {round(time())}.txt")
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    for i, hand_type in enumerate(preflop_types):
-        print(f'Ran simulations for {i} out of {len(preflop_types)} starting hand types')
-        print(f"Running simulation for {hand_type} vs {num_opps} opps")
-        suit1, suit2 = 'd', ('d' if hand_type.endswith('s') else 'h')
-        val1, val2 = hand_type[:2]
-        hand = Hand(Card(val1, suit1), Card(val2, suit2))
-        results.append(run_sim(hand, num_opps))
-        results.sort(key=lambda ev: ev.ev(), reverse=True)
-        write_EVs_to_file(filename, results, f" vs {num_opps} opps")
+    min_opps, max_opps = int((my_split := sys.argv[1].split('-'))[0]), int(my_split[-1])
+    for num_opps in range(min_opps, max_opps+1):
+        results: list[EV] = []
+        filename = (datetime.today().strftime('%b %d %Y').replace(' 0', ' ') +
+                    f"/preflop odds vs {num_opps} opps in {gametype.value} - {round(time())}.txt")
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        for i, hand_type in enumerate(preflop_types):
+            print(f'Ran simulations for {i} out of {len(preflop_types)} starting hand types')
+            print(f"Running simulation for {hand_type} vs {num_opps} opps")
+            suit1, suit2 = 'd', ('d' if hand_type.endswith('s') else 'h')
+            val1, val2 = hand_type[:2]
+            hand = Hand(Card(val1, suit1), Card(val2, suit2))
+            results.append(run_sim(hand, num_opps))
+            results.sort(key=lambda ev: ev.ev(), reverse=True)
+            write_EVs_to_file(filename, results, f" vs {num_opps} opps")
 
 if __name__ == '__main__':
     main()
