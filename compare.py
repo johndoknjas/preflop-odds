@@ -44,29 +44,29 @@ def first7HandIsBetter(h1: list[int], h2: list[int]) -> bool | None:
             if h1[wooper] != h2[wooper]:
                 return h1[wooper] > h2[wooper]
         return None  # chop
-    # The hands must be either quads, trips, full house, two pair, or one pair.
-    for scromp in range(6, 10):
+    # The hands must both be one of quads, trips, boat, two pair, or one pair.
+    assert 8 <= len(h1) == len(h2) <= 10
+    for scromp in range(6, len(h1)):
         if h1[scromp] != h2[scromp]:
             return h1[scromp] > h2[scromp]  # one is higher, so that one wins
-        if scromp + 1 == len(h1):
-            return None  # all were the same, so it's a chop
-    assert False
+    return None
 
-def getBestFrom7(sevenCards: list[int], sevenSuits: list[int]) -> list[int]:
+def getBestFrom7(sevenCards: tuple[int, ...], sevenSuits: tuple[int, ...]) -> list[int]:
     """Given 7 cards, call the 5-card comparator on each of the 21 possible combos."""
     bestHandRank = None
-    for comb_5 in itertools.combinations(zip(sevenCards, sevenSuits), 5):
-        newHandCards, newHandSuits = zip(*comb_5)
-        newHandRank = getHandRankFromFiveCards(sorted(newHandCards), newHandSuits)
+    for comb_5 in itertools.combinations(sorted(zip(sevenCards, sevenSuits), key=lambda t: t[0]), 5):
+        newHandRank = getHandRankFromFiveCards(
+            [t[0] for t in comb_5], all(comb_5[0][1] == t[1] for t in comb_5)
+        )
         if bestHandRank is None or first7HandIsBetter(newHandRank, bestHandRank):
             bestHandRank = newHandRank
     assert bestHandRank
     return bestHandRank
 
-def getHandRankFromFiveCards(fC: list[int], fS: list[int] | tuple[int, int, int, int, int]):
+def getHandRankFromFiveCards(fC: list[int], all_same_suit: bool):
     """`fC` contains the five values (should already be sorted) and `fS` contains the five suits."""
     # given 5 cards, determine what the rank of the hand is and add kicker info to it
-    if fS.count(fS[0]) == len(fS):
+    if all_same_suit:
         # flush, see if it's a regular flush or a straight flush
         fC.append(8 if (    (fC[0] == fC[1] - 1 == fC[2] - 2 == fC[3] - 3)
                         and (fC[4] - 1 == fC[3] or fC[4] - (num_card_vals()-1) == fC[0]))
@@ -93,8 +93,7 @@ def getHandRankFromFiveCards(fC: list[int], fS: list[int] | tuple[int, int, int,
         else:
             fC.extend((2, fC[4], fC[1], fC[2 if fC[0] == fC[1] and fC[3] == fC[4] else 0]))
     elif fC[0] == fC[1] or fC[1] == fC[2]:
-            fC.extend((1, fC[0], fC[4], fC[3], fC[2]) if fC[0] == fC[1] else
-                      (1, fC[1], fC[4], fC[3], fC[0]))
+        fC.extend((1, fC[0], fC[4], fC[3], fC[2]) if fC[0] == fC[1] else (1, fC[1], fC[4], fC[3], fC[0]))
     elif fC[2] == fC[3] or fC[3] == fC[4]:
         fC.extend((1, fC[2], fC[4], fC[1], fC[0]) if fC[2] == fC[3] else (1, fC[3], fC[2], fC[1], fC[0]))
     # If we haven't appended anything, note that it's a highcard hand by appending a zero:
@@ -104,14 +103,13 @@ def is_first_hand_better(cards: str):
     """`cards` should be in a format like this: `KhQh AsJs 5c6dTh4dJd`"""
     cards = (cards.replace("T", ":").replace("J", ";").replace("Q", "<")
                   .replace("K", "=").replace("A", ">"))
-    listOfCards = (",".join(str(ord(card)) for card in cards)).split(",")
-    c = [int(item) for item in listOfCards]
+    c = [ord(card) for card in cards]
     h1 = getBestFrom7(
-        [c[0], c[2], c[10], c[12], c[14], c[16], c[18]],
-        [c[1], c[3], c[11], c[13], c[15], c[17], c[19]],
+        (c[0], c[2], c[10], c[12], c[14], c[16], c[18]),
+        (c[1], c[3], c[11], c[13], c[15], c[17], c[19]),
     )
     h2 = getBestFrom7(
-        [c[5], c[7], c[10], c[12], c[14], c[16], c[18]],
-        [c[6], c[8], c[11], c[13], c[15], c[17], c[19]]
+        (c[5], c[7], c[10], c[12], c[14], c[16], c[18]),
+        (c[6], c[8], c[11], c[13], c[15], c[17], c[19])
     )
     return first7HandIsBetter(h1, h2)
