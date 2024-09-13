@@ -1,2 +1,4 @@
 Todos:
 
+Could get some speedup by not redoing the compare.py work to calculate the rank for a new besthand
+(from the loop in run_sim).

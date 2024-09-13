@@ -37,8 +37,8 @@ def first7HandIsBetter(h1: list[int], h2: list[int]) -> bool | None:
     if h1[5] != h2[5]:
         return h1[5] > h2[5]  # different ranks
     if h1[5] == 8 or h1[5] == rank('straight'):
-        # SF or straight: check middle card
-        return h1[2] > h2[2] if h1[2] != h2[2] else None
+        # SF or straight: check middle card, and if needed check if an ace is actually the low card
+        return h1[2] > h2[2] if h1[2] != h2[2] else h1[4] < h2[4] if h1[4] != h2[4] else None
     if h1[5] == rank('flush') or h1[5] == 0:  # flush or high card: check all five cards
         for wooper in range(4, -1, -1):
             if h1[wooper] != h2[wooper]:
