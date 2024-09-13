@@ -3,14 +3,14 @@
 
 from __future__ import annotations
 
-from enum import Enum, auto
+from enum import Enum
 from typing import Optional
 import itertools
 
 class GameType(Enum):
-    TEXAS = auto()
-    SHORTDECK = auto()
-    SHORTDECK_TRIPS = auto()
+    TEXAS = 'texas holdem'
+    SHORTDECK = 'regular shortdeck'
+    SHORTDECK_TRIPS = 'shortdeck trips variant'
 
 _ranks = {}
 _num_card_vals: Optional[int] = None

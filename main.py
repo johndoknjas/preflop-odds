@@ -118,7 +118,7 @@ def main() -> None:
     results: list[EV] = []
     num_opps = int(sys.argv[1])
     filename = (datetime.today().strftime('%b %d %Y').replace(' 0', ' ') +
-                f"/preflop odds vs {num_opps} opps - {round(time())}.txt")
+                f"/preflop odds vs {num_opps} opps in {gametype.value} - {round(time())}.txt")
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     for i, hand_type in enumerate(preflop_types):
         print(f'Ran simulations for {i} out of {len(preflop_types)} starting hand types')
