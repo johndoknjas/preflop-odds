@@ -2,3 +2,10 @@ Todos:
 
 Could get some speedup by not redoing the compare.py work to calculate the rank for a new besthand
 (from the loop in run_sim).
+
+Add a pytest file that runs tests for like 100 hands somehow (random gametype, random num opps, random player hand, etc),
+and then test that the equity is within like 0.5% of data you get from online calcs.
+
+After running the sims for the three gametypes, post the combined txt files on github.
+
+Update the readme to explain how to use the program, and the three txt files with results you'll have included.
