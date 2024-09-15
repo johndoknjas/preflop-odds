@@ -10,20 +10,23 @@ import itertools
 class GameType(Enum):
     TEXAS = 'texas holdem'
     SHORTDECK = 'regular shortdeck'
-    SHORTDECK_TRIPS = 'shortdeck trips variant'
+    SHORTDECK_TRIPS = 'shortdeck trips variant',
+    OMAHA = 'original omaha'
 
 _ranks = {}
 _num_card_vals: Optional[int] = None
 _mapping = str.maketrans("TJQKA", ":;<=>")
+_gametype: Optional[GameType] = None
 
-def set_gametype(gametype: GameType):
-    global _ranks, _num_card_vals
+def set_gametype(chosen_gametype: GameType):
+    global _ranks, _num_card_vals, _gametype
+    _gametype = chosen_gametype
     _ranks['boat'], _ranks['flush'], _ranks['straight'], _ranks['trips'] = 6, 5, 4, 3
     _num_card_vals = 13
-    if gametype in (GameType.SHORTDECK, GameType.SHORTDECK_TRIPS):
+    if chosen_gametype in (GameType.SHORTDECK, GameType.SHORTDECK_TRIPS):
         _num_card_vals = 9
         _ranks['boat'], _ranks['flush'] = _ranks['flush'], _ranks['boat']
-        if gametype == GameType.SHORTDECK_TRIPS:
+        if chosen_gametype == GameType.SHORTDECK_TRIPS:
             _ranks['straight'], _ranks['trips'] = _ranks['trips'], _ranks['straight']
 
 def rank(hand_type: str) -> int:
@@ -32,6 +35,10 @@ def rank(hand_type: str) -> int:
 def num_card_vals() -> int:
     assert _num_card_vals is not None
     return _num_card_vals
+
+def gametype() -> GameType:
+    assert _gametype
+    return _gametype
 
 def first7HandIsBetter(h1: list[int], h2: list[int]) -> bool | None:
     # given two hands, with the 5 cards + rank + relevant kicker details, say which wins
