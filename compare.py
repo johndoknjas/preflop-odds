@@ -84,8 +84,8 @@ def getHandRankFromFiveCards(fC: list[int], all_same_suit: bool):
         fC.extend((rank('trips'), fC[0], fC[4], fC[3]))
         # trips, both kickers higher; other kicker-types of trips in next line
     elif fC[2] == fC[3] and (fC[1] == fC[2] or fC[3] == fC[4]):
-            fC.extend((rank('trips'), fC[1], fC[4], fC[0]) if fC[1] == fC[2] else
-                      (rank('trips'), fC[2], fC[1], fC[0]))
+        fC.append(rank('trips'))
+        fC.extend((fC[1], fC[4], fC[0]) if fC[1] == fC[2] else (fC[2], fC[1], fC[0]))
     elif ((fC[0] == fC[1] and (fC[2] == fC[3] or fC[3] == fC[4])) or
           (fC[1] == fC[2] and fC[3] == fC[4])):  # two pair
         if fC[0] == fC[1] and fC[2] == fC[3]:
