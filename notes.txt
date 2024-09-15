@@ -9,3 +9,8 @@ and then test that the equity is within like 0.5% of data you get from online ca
 After running the sims for the three gametypes, post the combined txt files on github.
 
 Update the readme to explain how to use the program, and the three txt files with results you'll have included.
+
+Add support for Omaha sims. Will require modifying `getBestFrom7` to take min and max vals for #cards
+that can be used from the player hand and the community cards.
+    - On this note, would be good to use your Hand and Card classes in compare.py as well. Try
+      to replace the lists with them.
