@@ -12,7 +12,7 @@ def get_components(line: str) -> tuple[str, float]:
     text = ' '.join(x for x in line.split() if '#' not in x and '%' not in x)
     return (text, equity_percentage)
 
-def main():
+def main() -> None:
     shorter, longer = sorted((readlines(sys.argv[1]), readlines(sys.argv[2])), key=len)
     missing_lines = []
     equity_percent_diffs: list[tuple[str, float]] = []

@@ -10,7 +10,7 @@ from compare import GameType, gametype
 from main import Card, HOLDEM_VALS, SUITS, EV, HandType4Cards
 
 def sort_val(t: tuple[str, bool | None]) -> int:
-    return sum((i+1) * HOLDEM_VALS.index(c) for i,c in enumerate(t[0][::-1]) if c not in SUITS)
+    return sum((i+1) * HOLDEM_VALS[::-1].index(c) for i,c in enumerate(t[0][::-1]) if c in HOLDEM_VALS)
 
 def main() -> None: # todo - mypy says line 22, not line 15, when type for main is removed
     hand_1_str, hand_2_str = sys.argv[1:3]
