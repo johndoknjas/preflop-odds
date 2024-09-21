@@ -16,7 +16,7 @@ def main() -> None: # todo - mypy says line 22, not line 15, when type for main 
     hand_1_str, hand_2_str = sys.argv[1:3]
     compare.set_gametype(GameType.OMAHA)
     cards_in_play = [Card(s[i], s[i+1]) for s in (hand_1_str, hand_2_str) for i in range(0, len(s), 2)]
-    REM_CARDS = {c for c in {Card(*x) for x in product(HOLDEM_VALS, SUITS)} if c not in cards_in_play}
+    REM_CARDS = [c for c in (Card(*x) for x in product(HOLDEM_VALS, SUITS)) if c not in cards_in_play]
     comm_combos = list(combinations(REM_CARDS, 5))
     print(len(comm_combos))
     results: list[tuple[str, bool | None]] = []
@@ -26,12 +26,12 @@ def main() -> None: # todo - mypy says line 22, not line 15, when type for main 
         if i % print_interval == 0 and i > 0:
             for result in results[i-print_interval:i]:
                 print(result)
-            print(f"{i} comm hands processed; current EV for hand 1 is {ev_hand1.ev()}")
-            print('\n\n\n')
+            print(f"{i} comm hands processed; current EV for hand 1 is {ev_hand1.ev()}\n\n\n\n")
         comm_str = ''.join(str(x) for x in comm_cards)
         cards_str = f"{hand_1_str} {hand_2_str} {comm_str}"
         results.append((cards_str, compare.is_first_hand_better(cards_str)))
         ev_hand1.update(0.5 if results[-1][1] is None else int(results[-1][1])) # assumes only 1 opp
+    print(f"{i} comm hands processed; current EV for hand 1 is {ev_hand1.ev()}\n\n\n\n")
     results.sort(key=sort_val, reverse=True)
     filepath = f'tests/{round(time())}.txt'
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
