@@ -7,7 +7,7 @@ from compare import GameType
 _mapping = str.maketrans("TJQKA", ":;<=>")
 _rankings: dict = {0: "high card", 1: "one pair", 2: "two pair", 3: "trips", 4: "straight",
                    5: "flush", 6: "boat", 7: "quads", 8: "straight flush"}
-_rankings.update(dict([reversed(i) for i in _rankings.items()]))
+_rankings.update(dict(tuple(reversed(i)) for i in _rankings.items()))
 
 random_hands: list[tuple[str, ...]] = [
      ("6dJc8c5c 7c6sAs9d Kc5sJsKdQh", "two pair", "one pair"),
@@ -57,6 +57,8 @@ def assert_rankings(cards: tuple[str, ...]):
             player_cards, player_suits, comm_cards, comm_suits
         )
         assert _rankings[rank_list[5]] == cards[i+1]
+
+# todo - make test for getting best 5 card hand from 7 or 9 cards.
 
 @pytest.mark.parametrize("cards", omaha_hands())
 def test_omaha_matchups(cards: tuple[str, ...]):
