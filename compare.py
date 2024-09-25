@@ -43,6 +43,9 @@ def gametype() -> GameType:
 def num_hole_cards() -> int:
     return 4 if gametype() == GameType.OMAHA else 2
 
+# todo - make a global function (accessible to other files) for the list of CARDS being used,
+# and maybe make this and the other appropriate funcs in this file part of a common new file.
+
 rank_counters_h1 = [0] * 9
 rank_counters_h2 = [0] * 9
 def first5HandIsBetter(h1: list[int], h2: list[int], debug: bool = False) -> bool | None:
