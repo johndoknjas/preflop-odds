@@ -40,8 +40,19 @@ def gametype() -> GameType:
     assert _gametype
     return _gametype
 
-def first7HandIsBetter(h1: list[int], h2: list[int]) -> bool | None:
-    # given two hands, with the 5 cards + rank + relevant kicker details, say which wins
+def num_hole_cards() -> int:
+    return 4 if gametype() == GameType.OMAHA else 2
+
+rank_counters_h1 = [0] * 9
+rank_counters_h2 = [0] * 9
+def first5HandIsBetter(h1: list[int], h2: list[int], debug: bool = False) -> bool | None:
+    """Given info on two hands (the 5 cards + rank + relevant kicker details), say which wins"""
+    if debug:
+        rank_counters_h1[h1[5]] += 1
+        rank_counters_h2[h2[5]] += 1
+        if sum(rank_counters_h1) % 10000 == 0:
+            print(rank_counters_h1)
+            print(rank_counters_h2)
     if h1[5] != h2[5]:
         return h1[5] > h2[5] # different ranks
     if h1[5] in (rank('straight'), 8):
@@ -53,15 +64,25 @@ def first7HandIsBetter(h1: list[int], h2: list[int]) -> bool | None:
     assert 8 <= len(h1) == len(h2) <= 10
     return next((h1[i] > h2[i] for i in range(6, len(h1)) if h1[i] != h2[i]), None)
 
-def getBestFrom7(sevenCards: tuple[int, ...], sevenSuits: tuple[int, ...]) -> list[int]:
-    """Given 7 cards, call the 5-card comparator on each of the 21 possible combos."""
+def getBestComb(playerVals: tuple[int, ...], playerSuits: tuple[int, ...],
+                commVals: tuple[int, ...], commSuits: tuple[int, ...]) -> list[int]:
+    """Given 7 cards (or 4+5 for Omaha), call the 5-card comparator on each of the possible combos."""
+    player_cards = sorted(zip(playerVals, playerSuits, strict=True), key=lambda t: t[0])
+    comm_cards = sorted(zip(commVals, commSuits, strict=True), key=lambda t: t[0])
+    assert len(commVals) == len(commSuits) == 5
+    assert len(playerVals) == len(playerSuits) == num_hole_cards()
     bestHandRank = None
-    for comb_5 in itertools.combinations(sorted(zip(sevenCards, sevenSuits), key=lambda t: t[0]), 5):
-        newHandRank = getHandRankFromFiveCards(
-            [t[0] for t in comb_5], all(comb_5[0][1] == t[1] for t in comb_5)
-        )
-        if bestHandRank is None or first7HandIsBetter(newHandRank, bestHandRank):
-            bestHandRank = newHandRank
+    for num_comm_cards in range(3, (4 if gametype() == GameType.OMAHA else 6)):
+        for comm_comb, player_comb in itertools.product(
+            itertools.combinations(comm_cards, num_comm_cards),
+            itertools.combinations(player_cards, 5 - num_comm_cards)
+        ):
+            comb = tuple(sorted(comm_comb + player_comb, key=lambda t: t[0]))
+            newHandRank = getHandRankFromFiveCards(
+                [t[0] for t in comb], all(comb[0][1] == t[1] for t in comb)
+            )
+            if not bestHandRank or first5HandIsBetter(newHandRank, bestHandRank):
+                bestHandRank = newHandRank
     assert bestHandRank
     return bestHandRank
 
@@ -101,10 +122,25 @@ def getHandRankFromFiveCards(fC: list[int], all_same_suit: bool):
     # If we haven't appended anything, note that it's a highcard hand by appending a zero:
     return fC if len(fC) > 5 else fC + [0]
 
-def is_first_hand_better(cards: str):
-    """`cards` should be in a format like this: `KhQh AsJs 5c6dTh4dJd`"""
+def add_spacing(cards: str) -> str:
+    """A function useful for debugging. Takes in a string (such as the `cards` param of
+       `is_first_hand_better`), and then adds spaces between each card (two chars), and puts each
+       hand (and the community cards) on separate lines."""
+    groups = cards.split()
+    for x, group in enumerate(groups):
+        new_str = ''
+        for i in range(len(group)):
+            new_str += group[i]
+            if i % 2 != 0:
+                new_str += ' '
+        groups[x] = new_str
+    return '\n'.join(groups)
+
+def is_first_hand_better(cards: str) -> bool | None:
+    """`cards` should be in a format like this: `KhQh AsJs 5c6dTh4dJd`; for Omaha, the format is similar
+        but with 4 cards, 4 cards, 5 cards."""
     groups = tuple(tuple(ord(card) for card in section.translate(_mapping)) for section in cards.split())
     assert len(groups) == 3 and all(len(group) % 2 == 0 for group in groups)
     comm_vals, comm_suits = groups[2][::2], groups[2][1::2]
-    return first7HandIsBetter(getBestFrom7(groups[0][::2] + comm_vals, groups[0][1::2] + comm_suits),
-                              getBestFrom7(groups[1][::2] + comm_vals, groups[1][1::2] + comm_suits))
+    return first5HandIsBetter(getBestComb(groups[0][::2], groups[0][1::2], comm_vals, comm_suits),
+                              getBestComb(groups[1][::2], groups[1][1::2], comm_vals, comm_suits))

@@ -53,7 +53,7 @@ def assert_rankings(cards: tuple[str, ...]):
     for i in range(2):
         player_cards, player_suits = int_groups[i]
         comm_cards, comm_suits = int_groups[-1]
-        rank_list = compare.getBestFrom7(
+        rank_list = compare.getBestComb(
             player_cards, player_suits, comm_cards, comm_suits
         )
         assert _rankings[rank_list[5]] == cards[i+1]
