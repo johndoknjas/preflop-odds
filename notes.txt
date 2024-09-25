@@ -4,7 +4,11 @@ Could get some speedup by not redoing the compare.py work to calculate the rank 
 (from the loop in run_sim).
 
 Add a pytest file that runs tests for like 100 hands somehow (random gametype, random num opps, random player hand, etc),
-and then test that the equity is within like 0.5% of data you get from online calcs.
+and then test that the equity is within some points of a percent of data you get from online calcs.
+    - https://caniwin.com/texasholdem/oddscalculator/
+    - Can use the percent error it gives immediately (~100,000 sims) for what you should get after 100k
+      sims, compared to the online calc's "true" value after a million or 2. Though note that they say
+      their odds are within a 95% error margin, so be slightly less strict than their bounds on your tests.
 
 After running the sims for the three gametypes, post the combined txt files on github.
 
