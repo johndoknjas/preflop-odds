@@ -37,8 +37,8 @@ def generate_stats(lines: list[str]) -> None:
     print(f"First hand tied {ties / len(lines) * 100}%")
     print(f"First hand lost {losses / len(lines) * 100}%\n")
 
-@Utils.pypy_notice
-def main() -> None: # todo - mypy says line 22, not line 15, when type for main is removed
+def main() -> None: # todo - mypy says wrong line when type for main is removed
+    Utils.pypy_notice()
     if sys.argv[1] == 'trim':
         filepath = sys.argv[2]
         with open(filepath, 'r') as f:
