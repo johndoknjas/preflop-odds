@@ -152,6 +152,7 @@ def run_sim(hand_type: HandType2Cards | HandType4Cards, num_opps: int, debug: bo
 def write_EVs_to_file(filename: str, evs: list[EV], trailing_msg: str = '') -> None:
     """Any existing contents in the file will be overwritten; `trailing_msg` will be added
        at the end of each line."""
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     with open(filename, 'w') as f:
         for i, ev in enumerate(evs):
             f.write(f"#{i+1}: {str(ev)}{trailing_msg}\n")
@@ -183,7 +184,6 @@ def main() -> None:
         results: list[EV] = []
         filename = (datetime.today().strftime('%b %d %Y').replace(' 0', ' ') +
                     f"/preflop odds vs {num_opps} opps in {gametype().value} - {round(time())}.txt")
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
         for i, hand_type in enumerate(preflop_types): # type: ignore
             print(f'Ran simulations for {i} out of {len(preflop_types)} starting hand types') # type: ignore
             print(f"Running simulation for {hand_type} vs {num_opps} opps")
