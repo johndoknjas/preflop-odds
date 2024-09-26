@@ -8,6 +8,7 @@ import re
 import compare
 from compare import GameType
 from main import Card, HOLDEM_VALS, SUITS, EV, HandType4Cards
+import Utils
 
 def write_to_file(results: list[tuple[str, bool | None]] | list[str]) -> None:
     filepath = f'tests/{round(time())}.txt'
@@ -36,6 +37,7 @@ def generate_stats(lines: list[str]) -> None:
     print(f"First hand tied {ties / len(lines) * 100}%")
     print(f"First hand lost {losses / len(lines) * 100}%\n")
 
+@Utils.pypy_notice
 def main() -> None: # todo - mypy says line 22, not line 15, when type for main is removed
     if sys.argv[1] == 'trim':
         filepath = sys.argv[2]

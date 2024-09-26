@@ -16,3 +16,5 @@ Update the readme to explain how to use the program, and the three txt files wit
 Mention running with `pypy` for best performance.
 
 Maybe try to use your Card class in compare.py as well, rather than lists/tuples.
+
+Look into getting pytest to use pypy rather than CPython to run the tests.

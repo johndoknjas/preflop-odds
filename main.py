@@ -6,6 +6,7 @@ from time import time
 import sys
 from datetime import datetime
 import os
+import Utils
 
 import compare
 from compare import GameType, gametype, num_hole_cards
@@ -155,6 +156,7 @@ def write_EVs_to_file(filename: str, evs: list[EV], trailing_msg: str = '') -> N
         for i, ev in enumerate(evs):
             f.write(f"#{i+1}: {str(ev)}{trailing_msg}\n")
 
+@Utils.pypy_notice
 def main() -> None:
     chosen_gametype = (GameType.SHORTDECK if 'shortdeck' in sys.argv else
                        GameType.SHORTDECK_TRIPS if 'shortdeck_v' in sys.argv else
