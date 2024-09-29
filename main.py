@@ -1,11 +1,12 @@
 from __future__ import annotations
 import random
-from itertools import product, combinations_with_replacement
+from itertools import product, combinations_with_replacement, combinations, permutations, chain
 from dataclasses import dataclass
 from time import time
 import sys
 from datetime import datetime
 import os
+from typing import Iterable
 
 import compare
 from compare import GameType, gametype, num_hole_cards
@@ -18,44 +19,57 @@ HOLDEM_VALS = '2345' + SHORTDECK_VALS
 SUITS = 'shdc'
 # todo - use an enum for SUITS?
 
-def get_free_suit(taken_suits: dict[int, str]) -> str:
-    return next(s for s in SUITS if s not in taken_suits.values())
-
-# todo - continue working on this class, consider aiming to replace HandType4Cards with it?
-# Add a param taking card vals.
-# Also maybe change `cards_together` to be a set of sets, where each group represents
-# card vals that are of the same suits. Will have to ensure order as needed yourself in the class.
-# Maybe less hacky to instead use card vals directly, rather than 1,2,3,4.
-# class also hasn't been tested at all yet.
-@dataclass
+# todo - replace HandType4 class with this one
+# Will have to check whether users of the class will rely on any specific orders of cards,
+# and if so whether it aligns with what the class does now.
 class OmahaSuitType:
-    num_unique_suits: int
-    cards_together: list[int]
-    """E.g., [1,2,3] would mean the 1st, 2nd, and 3rd highest val cards should have the same suit.
-       Should only contain values from 1-4, and be 0 <= len <= 4.
-       If a double-suited hand, only provide card ints for one of the suited partners."""
+    def __init__(self, *card_groupsP: Iterable[str] | str):
+        """Each argument should contain card vals that should be of the same suit as each other,
+           and of a different suit to all other groups in `cards`."""
+        card_groupsP = tuple(((g,) if isinstance(g, str) else g) for g in card_groupsP)
+        self.card_groups = tuple(sorted(tuple(sorted(group)) for group in card_groupsP))
 
-    def get_suit(self, known_suits: dict[int, str], card_to_determine: int) -> str:
-        """The key for each item in `known_suits` (as well as `card_to_determine`) should be
-           ints from 1 to 4. They represent how high the value of the card in question is,
-           relative to the four in the hand."""
-        assert known_suits.keys() <= {1,2,3,4} and card_to_determine not in known_suits
-        if self.num_unique_suits == 1:
-            return next((s for s in known_suits.values()), SUITS[0])
-        if self.num_unique_suits == 4:
-            return get_free_suit(known_suits)
-        if len(self.cards_together) == 3:
-            # three cards same suit, one card different
-            return next((i[1] for i in known_suits.items() if i[0] in self.cards_together and
-                        card_to_determine in self.cards_together), get_free_suit(known_suits))
-        # must be a single-suited or double-suited hand
-        return next(
-            (known_suits[i] for i in (1,2,3,4) if
-             i != card_to_determine and i in known_suits and
-             (i in self.cards_together) == (card_to_determine in self.cards_together) and
-             (self.num_unique_suits != 3 or i in self.cards_together)),
-            get_free_suit(known_suits)
+    def generate_concrete_hand(self) -> list[Card]:
+        assert self.well_formed()
+        return sorted(
+            (Card(card_val, SUITS[i]) for i, suit_group in enumerate(self.card_groups)
+                                      for card_val in suit_group),
+            key=lambda c: HOLDEM_VALS[::-1].index(c.val)
         )
+
+    def well_formed(self) -> bool:
+        return (sum(len(group) for group in self.card_groups) == 4 and
+                all(len(group) == len(set(group)) for group in self.card_groups))
+
+    def __eq__(self, other) -> bool:
+        assert isinstance(other, OmahaSuitType) and self.well_formed() and other.well_formed()
+        return self.card_groups == other.card_groups
+
+    def __hash__(self):
+        assert self.well_formed()
+        return hash(self.card_groups)
+
+    def __str__(self) -> str:
+        assert self.well_formed()
+        # todo
+
+    @staticmethod
+    def all_hand_types() -> list[OmahaSuitType]:
+        card_vals = HOLDEM_VALS[::-1]
+        objects: list[OmahaSuitType] = []
+        for comb in combinations_with_replacement(card_vals, 4):
+            first_2, evens, beg_end, mid_2, odds, last_2 = combinations(comb, 2)
+            objects.extend(chain(
+                (OmahaSuitType(comb),),
+                (OmahaSuitType(comb[:x], comb[x:]) for x in (1,2,3)),
+                (OmahaSuitType(x, *y) for x,y in permutations((first_2, last_2))),
+                (OmahaSuitType((comb[0], comb[x], comb[3]), comb[y]) for x,y in ((1,2), (2,1))),
+                (OmahaSuitType(*x, *y) for x,y in chain(product((evens, [evens]), (odds, [odds])),
+                                                        product(([beg_end], beg_end), ([mid_2], mid_2))))
+            ))
+        objects = list(set(o for o in objects if o.well_formed()))
+        assert len(objects) == 16432
+        return objects
 
 @dataclass
 class Card:
@@ -150,9 +164,11 @@ class HandType4Cards:
 
 def cards_as_str(cards: list[Card]) -> str:
     """Used for debugging"""
-    return ' '.join(str(card) for card in sorted(cards, key=lambda c: c.val))
+    return ' '.join(str(card) for card in sorted(cards, key=lambda c: HOLDEM_VALS[::-1].index(c.val)))
 
 def run_sim(hand_type: HandType2Cards | HandType4Cards, num_opps: int, debug: bool = False) -> EV:
+    # todo - update so that the sim is run for num_opps and all positive ints less than it as well.
+    # Just saves a bunch of time.
     CARD_VALS = SHORTDECK_VALS if gametype() in (
         GameType.SHORTDECK, GameType.SHORTDECK_TRIPS
     ) else HOLDEM_VALS
@@ -229,8 +245,6 @@ def main() -> None:
             print(f"Running simulation for {hand_type} vs {num_opps} opps")
             results.append(run_sim(hand_type, num_opps))
             results.sort(key=lambda ev: ev.ev(), reverse=True)
-            if i > 0 and i % 100 == 0:
-                write_EVs_to_file(filename, results, f" vs {num_opps} opps")
         write_EVs_to_file(filename, results, f" vs {num_opps} opps")
 
 if __name__ == '__main__':
