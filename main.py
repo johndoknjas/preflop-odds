@@ -27,7 +27,7 @@ class OmahaSuitType:
         """Each argument should contain card vals that should be of the same suit as each other,
            and of a different suit to all other groups in `cards`."""
         card_groupsP = tuple(((g,) if isinstance(g, str) else g) for g in card_groupsP)
-        self.card_groups = tuple(sorted(tuple(sorted(group)) for group in card_groupsP))
+        self.card_groups = tuple(sorted(''.join(sorted(group)) for group in card_groupsP))
 
     def generate_concrete_hand(self) -> list[Card]:
         assert self.well_formed()
