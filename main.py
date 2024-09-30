@@ -7,6 +7,7 @@ import sys
 from datetime import datetime
 import os
 from typing import Iterable
+from functools import cmp_to_key
 
 import compare
 from compare import GameType, gametype, num_hole_cards
@@ -19,22 +20,40 @@ HOLDEM_VALS = '2345' + SHORTDECK_VALS
 SUITS = 'shdc'
 # todo - use an enum for SUITS?
 
+def card_val_key(card: str | Card) -> int:
+    """The greater the card val is, the lesser the int that'll be returned.
+       `card` can be a `Card` object, or a str (with or without a suit char)."""
+    if isinstance(card, Card):
+        card = card.val
+    card = card[0] # in case `card` was passed in as a string with a suit
+    return -HOLDEM_VALS.index(card)
+
+def cmp_group(g1: str, g2: str) -> int:
+    for i in range(min(len(g1), len(g2))):
+        first, second = card_val_key(g1[i]), card_val_key(g2[i])
+        if first < second:
+            return -1
+        if second < first:
+            return 1
+    return -1 if len(g1) > len(g2) else 1 if len(g1) < len(g2) else 0
+
 # todo - replace HandType4 class with this one
 # Will have to check whether users of the class will rely on any specific orders of cards,
 # and if so whether it aligns with what the class does now.
 class OmahaSuitType:
+    group_key = cmp_to_key(cmp_group)
     def __init__(self, *card_groupsP: Iterable[str] | str):
         """Each argument should contain card vals that should be of the same suit as each other,
            and of a different suit to all other groups in `cards`."""
-        card_groupsP = tuple(((g,) if isinstance(g, str) else g) for g in card_groupsP)
-        self.card_groups = tuple(sorted(''.join(sorted(group)) for group in card_groupsP))
+        self.card_groups = tuple(
+            sorted((''.join(sorted(g, key=card_val_key)) for g in card_groupsP), key=OmahaSuitType.group_key)
+        )
 
     def generate_concrete_hand(self) -> list[Card]:
         assert self.well_formed()
         return sorted(
             (Card(card_val, SUITS[i]) for i, suit_group in enumerate(self.card_groups)
-                                      for card_val in suit_group),
-            key=lambda c: HOLDEM_VALS[::-1].index(c.val)
+                                      for card_val in suit_group), key=card_val_key
         )
 
     def well_formed(self) -> bool:
@@ -51,7 +70,7 @@ class OmahaSuitType:
 
     def __str__(self) -> str:
         assert self.well_formed()
-        # todo
+        return '.'.join(self.card_groups)
 
     @staticmethod
     def all_hand_types() -> list[OmahaSuitType]:
@@ -164,7 +183,7 @@ class HandType4Cards:
 
 def cards_as_str(cards: list[Card]) -> str:
     """Used for debugging"""
-    return ' '.join(str(card) for card in sorted(cards, key=lambda c: HOLDEM_VALS[::-1].index(c.val)))
+    return ' '.join(str(card) for card in sorted(cards, key=card_val_key))
 
 def run_sim(hand_type: HandType2Cards | HandType4Cards, num_opps: int, debug: bool = False) -> EV:
     # todo - update so that the sim is run for num_opps and all positive ints less than it as well.

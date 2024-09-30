@@ -7,7 +7,7 @@ import re
 
 import compare
 from compare import GameType
-from main import Card, HOLDEM_VALS, SUITS, EV, HandType4Cards
+from main import Card, HOLDEM_VALS, SUITS, EV, HandType4Cards, card_val_key
 import Utils
 
 def write_to_file(results: list[tuple[str, bool | None]] | list[str]) -> None:
@@ -19,7 +19,7 @@ def write_to_file(results: list[tuple[str, bool | None]] | list[str]) -> None:
                     if isinstance(result, tuple) else f"{result}\n")
 
 def sort_key(combo: tuple[Card, Card, Card, Card, Card]) -> tuple[int, ...]:
-    return tuple(HOLDEM_VALS[::-1].index(c.val) for c in combo if c.val in HOLDEM_VALS)
+    return tuple(card_val_key(c) for c in combo if c.val in HOLDEM_VALS)
 
 def generate_stats(lines: list[str]) -> None:
     ev = EV(HandType4Cards(('A', 'A', 'A', 'A'))) # don't care about the hand type

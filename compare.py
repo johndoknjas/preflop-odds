@@ -72,8 +72,7 @@ def getBestComb(playerVals: tuple[int, ...], playerSuits: tuple[int, ...],
     """Given 7 cards (or 4+5 for Omaha), call the 5-card comparator on each of the possible combos."""
     player_cards = sorted(zip(playerVals, playerSuits, strict=True), key=lambda t: t[0])
     comm_cards = sorted(zip(commVals, commSuits, strict=True), key=lambda t: t[0])
-    assert len(commVals) == len(commSuits) == 5
-    assert len(playerVals) == len(playerSuits) == num_hole_cards()
+    assert len(commVals) == len(commSuits) == 5 and len(playerVals) == len(playerSuits) == num_hole_cards()
     bestHandRank = None
     for num_comm_cards in range(3, (4 if gametype() == GameType.OMAHA else 6)):
         for comm_comb, player_comb in itertools.product(
