@@ -16,7 +16,7 @@ def get_components(line: str) -> tuple[str, float]:
 def main() -> None:
     Utils.pypy_notice()
     shorter, longer = sorted((readlines(sys.argv[1]), readlines(sys.argv[2])), key=len)
-    missing_lines = []
+    missing_lines: list[tuple[str, float]] = []
     equity_percent_diffs: list[tuple[str, float]] = []
     for line in longer:
         components = get_components(line)
@@ -30,8 +30,7 @@ def main() -> None:
     for diff in equity_percent_diffs:
         print(f"{diff[0].split()[0]} has a change in equity percentage of {diff[1]}%")
     print(f"\nNum missing lines in the longer file but not the shorter: {len(missing_lines)}")
-    for line in missing_lines:
-        print(line)
+    print('\n'.join(str(t) for t in missing_lines))
     print(f'Average change in equity percentage: ' +
           f'{sum(j for _, j in equity_percent_diffs) / len(equity_percent_diffs)}%')
 
