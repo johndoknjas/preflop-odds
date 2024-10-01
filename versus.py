@@ -22,7 +22,7 @@ def sort_key(combo: tuple[Card, Card, Card, Card, Card]) -> tuple[int, ...]:
     return tuple(card_val_key(c) for c in combo if c.val in HOLDEM_VALS)
 
 def generate_stats(lines: list[str]) -> None:
-    ev = EV(HandType4Cards(('A', 'A', 'A', 'A'))) # don't care about the hand type
+    ev = EV()
     wins, ties, losses = 0,0,0
     for line in lines:
         ev.update(0.5 if line.endswith("None") else int(line.endswith("True")))
@@ -67,7 +67,7 @@ def main() -> None: # todo - mypy says wrong line when type for main is removed
     comm_combos = sorted(combinations(REM_CARDS, 5), key=sort_key)
     print(f"Going through {len(comm_combos)} community combos...")
     results: list[tuple[str, bool | None]] = []
-    ev_hand1 = EV(HandType4Cards(tuple(re.findall('..', hand_1_str))))
+    ev_hand1 = EV()
     print_interval = 10000
     for i, comm_cards in enumerate(comm_combos):
         if i % print_interval == 0 and i > 0:

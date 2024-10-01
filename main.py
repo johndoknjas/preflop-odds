@@ -6,7 +6,7 @@ from time import time
 import sys
 from datetime import datetime
 import os
-from typing import Iterable
+from typing import Iterable, Optional
 from functools import cmp_to_key
 
 import compare
@@ -105,10 +105,9 @@ class Card:
 
 @dataclass
 class EV:
-    # todo - make it optional to set a hand_type - if None, just assert False in __str__ in case it's called.
     # also, update class so that it keeps track of #wins, #losses, and #splits. The #wins is diff
     # from `pots_won`, it'd be the number of full pots won. User may just be interested in this info.
-    hand_type: HandType2Cards | HandType4Cards
+    hand_type: Optional[HandType2Cards | HandType4Cards] = None
     pots_won: float = 0
     hands_played: int = 0
 
@@ -121,6 +120,7 @@ class EV:
         return round(self.pots_won / self.hands_played * 100, 3)
 
     def __str__(self) -> str:
+        assert self.hand_type is not None
         return f"{self.hand_type} wins {self.ev()}% of the pot on avg"
 
 @dataclass
@@ -192,7 +192,7 @@ def run_sim(hand_type: HandType2Cards | HandType4Cards, num_opps: int, debug: bo
         GameType.SHORTDECK, GameType.SHORTDECK_TRIPS
     ) else HOLDEM_VALS
     ALL_CARDS = {Card(*x) for x in product(CARD_VALS, SUITS)}
-    ev = EV(hand_type)
+    ev = EV(hand_type=hand_type)
     num_trials = 100000
     for i in range(num_trials):
         assert len(ALL_CARDS) == 52
